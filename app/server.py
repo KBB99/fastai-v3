@@ -55,8 +55,15 @@ async def analyze(request):
     data = await request.form()
     img_bytes = await (data['file'].read())
     img = open_image(BytesIO(img_bytes))
-    prediction = learn.predict(img)[0]
-    return JSONResponse({'result': str(prediction)})
+    prediction = learn.predict(img)
+    print("Prediction",prediction)
+    probabilities = torch.sort(prediction[2],descending=True)
+    print("Probabilities",probabilities)
+    top_3_probabilities = probabilities[0][:3]
+    top_3_names = probabilities[1][:3]
+    # result = {classes[top_3_names[0].item()]:str("%.2f"%(100*top_3_probabilities[0]).item()),classes[top_3_names[1].item()]:str("%.2f"%(100*top_3_probabilities[1].item())),classes[top_3_names[2].item()]:str("%.2f"%(100*top_3_probabilities[2].item()))}
+    result = {classes[top_3_names[0].item()]:str("%.2f"%(100*top_3_probabilities[0]).item()),classes[top_3_names[1].item()]:str("%.2f"%(100*top_3_probabilities[1].item())),classes[top_3_names[2].item()]:str("%.2f"%(100*top_3_probabilities[2].item()))}
+    return JSONResponse({'result': str(result)})
 
 if __name__ == '__main__':
     if 'serve' in sys.argv: uvicorn.run(app=app, host='0.0.0.0', port=5042)
